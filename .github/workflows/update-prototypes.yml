@@ -2,7 +2,7 @@ name: Update prototypes.json
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths-ignore:
       - 'prototypes.json'
 
