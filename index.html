@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototype Library</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+        h1 { color: #00ffcc; margin-bottom: 5px; }
+        p { color: #aaaaaa; margin-bottom: 30px; }
+        .prototype-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .prototype h2 {
+            font-size: 1.2rem;
+            margin: 0 0 10px;
+            color: #ffffff;
+        }
+        .version-list { display: flex; flex-direction: column; gap: 10px; }
+        .version-card {
+            background-color: #2a2a2a;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: bold;
+            border: 2px solid #3a3a3a;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .version-card:hover {
+            border-color: #00ffcc;
+            background-color: #333333;
+            transform: translateY(-2px);
+        }
+        .tag {
+            font-size: 0.8rem;
+            background-color: #00ffcc;
+            color: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prototype Library</h1>
+    <p>Pick a prototype, then choose a build version to play:</p>
+    <div class="prototype-list" id="prototype-list">Loading...</div>
+
+    <script>
+        fetch('./prototypes.json')
+            .then(res => res.json())
+            .then(prototypes => {
+                const container = document.getElementById('prototype-list');
+                container.innerHTML = '';
+
+                prototypes.forEach(prototype => {
+                    const section = document.createElement('div');
+                    section.className = 'prototype';
+
+                    const title = document.createElement('h2');
+                    title.textContent = prototype.name;
+                    section.appendChild(title);
+
+                    const list = document.createElement('div');
+                    list.className = 'version-list';
+
+                    [...prototype.versions].reverse().forEach(v => {
+                        const a = document.createElement('a');
+                        a.className = 'version-card';
+                        a.href = `./prototypes/${prototype.slug}/${v.version}/`;
+
+                        const label = document.createElement('span');
+                        label.textContent = v.version;
+                        a.appendChild(label);
+
+                        if (v.tag) {
+                            const tag = document.createElement('span');
+                            tag.className = 'tag';
+                            tag.textContent = v.tag;
+                            a.appendChild(tag);
+                        }
+                        list.appendChild(a);
+                    });
+
+                    section.appendChild(list);
+                    container.appendChild(section);
+                });
+            })
+            .catch(() => {
+                document.getElementById('prototype-list').textContent =
+                    'Could not load prototypes.json';
+            });
+    </script>
+</body>
+</html>
