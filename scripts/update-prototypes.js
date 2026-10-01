@@ -18,6 +18,16 @@ const compareVersions = (a, b) => {
 const prettify = (slug) =>
   slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
+const jsonPath = path.join(__dirname, '..', 'prototypes.json');
+
+let existing = [];
+try { existing = JSON.parse(fs.readFileSync(jsonPath, 'utf8')); } catch (e) {}
+const oldChanges = (slug, version) => {
+  const proto = existing.find(p => p.slug === slug);
+  const ver = proto && proto.versions.find(v => v.version === version);
+  return (ver && ver.changes) || [];
+};
+
 const prototypes = fs.readdirSync(prototypesDir)
   .filter(name => isDir(path.join(prototypesDir, name)))
   .sort()
@@ -32,13 +42,14 @@ const prototypes = fs.readdirSync(prototypesDir)
       slug,
       versions: versions.map((v, i) => ({
         version: v,
-        tag: i === versions.length - 1 ? 'latest' : ''
+        tag: i === versions.length - 1 ? 'latest' : '',
+        changes: oldChanges(slug, v)
       }))
     };
   })
   .filter(g => g.versions.length > 0);
 
 fs.writeFileSync(
-  path.join(__dirname, '..', 'prototypes.json'),
+  jsonPath,
   JSON.stringify(prototypes, null, 2) + '\n'
 );
