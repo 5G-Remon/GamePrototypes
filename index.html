@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prototype Library</title>
+    <title>5G Games Prototype</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -80,6 +80,21 @@
             justify-content: space-between;
             align-items: center;
         }
+        .version-card.has-changes { display: block; }
+        .version-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .version-changes {
+            margin: 10px 0 0;
+            padding: 10px 0 0 18px;
+            border-top: 1px solid #3a3a3a;
+            color: #cccccc;
+            font-weight: normal;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
         .version-card:hover { border-color: #00ffcc; background-color: #333333; }
         .version-card:focus-visible { outline: 2px solid #00ffcc; outline-offset: 2px; }
  
@@ -97,7 +112,7 @@
     </style>
 </head>
 <body>
-    <h1>Prototype Library</h1>
+    <h1>5G Games Prototype</h1>
     <p>Pick a prototype, then choose a build version to play:</p>
     <div class="prototype-list" id="prototype-list">Loading...</div>
  
@@ -148,15 +163,37 @@
                         a.className = 'version-card';
                         a.href = `./prototypes/${prototype.slug}/${v.version}/`;
  
+                        const hasChanges = v.changes && v.changes.length > 0;
+
                         const label = document.createElement('span');
                         label.textContent = v.version;
-                        a.appendChild(label);
- 
+
+                        let tag = null;
                         if (v.tag) {
-                            const tag = document.createElement('span');
+                            tag = document.createElement('span');
                             tag.className = 'tag';
                             tag.textContent = v.tag;
-                            a.appendChild(tag);
+                        }
+
+                        if (hasChanges) {
+                            a.classList.add('has-changes');
+                            const head = document.createElement('div');
+                            head.className = 'version-head';
+                            head.appendChild(label);
+                            if (tag) head.appendChild(tag);
+                            a.appendChild(head);
+
+                            const ul = document.createElement('ul');
+                            ul.className = 'version-changes';
+                            v.changes.forEach(c => {
+                                const li = document.createElement('li');
+                                li.textContent = c;
+                                ul.appendChild(li);
+                            });
+                            a.appendChild(ul);
+                        } else {
+                            a.appendChild(label);
+                            if (tag) a.appendChild(tag);
                         }
                         list.appendChild(a);
                     });
