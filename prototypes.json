@@ -1,5 +1,18 @@
 [
   {
+    "name": "Fortune Gems Trio",
+    "slug": "fortune-gems-trio",
+    "versions": [
+      {
+        "version": "v0.0.0",
+        "tag": "latest",
+        "changes": [
+          "First version (all bet mode)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "Pinata 2500",
     "slug": "pinata-2500",
     "versions": [
