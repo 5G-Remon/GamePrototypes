@@ -28,6 +28,15 @@ const oldChanges = (slug, version) => {
   return (ver && ver.changes) || [];
 };
 
+const readChangesFile = (versionPath) => {
+  const file = path.join(versionPath, 'changes.txt');
+  if (!fs.existsSync(file)) return null;
+  return fs.readFileSync(file, 'utf8')
+    .split(/\r?\n/)
+    .map(line => line.replace(/^\s*[-*]\s+/, '').trim())
+    .filter(Boolean);
+};
+
 const prototypes = fs.readdirSync(prototypesDir)
   .filter(name => isDir(path.join(prototypesDir, name)))
   .sort()
@@ -43,7 +52,7 @@ const prototypes = fs.readdirSync(prototypesDir)
       versions: versions.map((v, i) => ({
         version: v,
         tag: i === versions.length - 1 ? 'latest' : '',
-        changes: oldChanges(slug, v)
+        changes: readChangesFile(path.join(prototypePath, v)) || oldChanges(slug, v)
       }))
     };
   })
