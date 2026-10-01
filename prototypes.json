@@ -5,8 +5,17 @@
     "versions": [
       {
         "version": "v0.0.0",
+        "tag": "",
+        "changes": [
+          "First version (default bet mode only)"
+        ]
+      },
+      {
+        "version": "v0.0.1",
         "tag": "latest",
-        "changes": []
+        "changes": [
+          "Added extra bet mode"
+        ]
       }
     ]
   }
