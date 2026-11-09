@@ -1,0 +1,1 @@
+Change mid reel background color for different collect mode
