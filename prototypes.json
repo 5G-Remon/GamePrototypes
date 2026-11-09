@@ -32,9 +32,16 @@
       },
       {
         "version": "v0.0.2",
-        "tag": "latest",
+        "tag": "",
         "changes": [
           "Added all bet mode"
+        ]
+      },
+      {
+        "version": "v0.0.3",
+        "tag": "latest",
+        "changes": [
+          "Change mid reel background color for different collect mode"
         ]
       }
     ]
