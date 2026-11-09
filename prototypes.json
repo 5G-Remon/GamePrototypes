@@ -25,9 +25,16 @@
       },
       {
         "version": "v0.0.1",
-        "tag": "latest",
+        "tag": "",
         "changes": [
           "Added extra bet mode"
+        ]
+      },
+      {
+        "version": "v0.0.2",
+        "tag": "latest",
+        "changes": [
+          "Added all bet mode"
         ]
       }
     ]
