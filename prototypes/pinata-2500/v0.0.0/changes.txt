@@ -1,1 +1,0 @@
-First version (default bet mode only)
