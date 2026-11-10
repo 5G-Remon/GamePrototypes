@@ -17,7 +17,15 @@
             padding: 40px 20px;
             box-sizing: border-box;
         }
-        h1 { color: #00ffcc; margin-bottom: 5px; }
+        h1 {
+            color: #00ffcc;
+            margin: 0 0 24px;
+            padding-bottom: 12px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-bottom: 2px solid #00ffcc;
+        }
         p { color: #aaaaaa; margin-bottom: 30px; }
  
         .prototype-list {
@@ -47,18 +55,18 @@
         }
         .prototype-btn:hover { border-color: #00ffcc; background-color: #333333; }
         .prototype-btn:focus-visible { outline: 2px solid #00ffcc; outline-offset: 2px; }
-        .prototype.open .prototype-btn { border-color: #00ffcc; }
+        .prototype.open > .prototype-btn { border-color: #00ffcc; }
  
         .meta { display: flex; align-items: center; gap: 12px; color: #aaaaaa; font-size: 0.85rem; font-weight: normal; }
         .chevron { transition: transform 0.25s; }
-        .prototype.open .chevron { transform: rotate(180deg); }
+        .prototype.open > .prototype-btn .chevron { transform: rotate(180deg); }
  
         .versions {
             display: grid;
             grid-template-rows: 0fr;
             transition: grid-template-rows 0.25s ease;
         }
-        .prototype.open .versions { grid-template-rows: 1fr; }
+        .prototype.open > .versions { grid-template-rows: 1fr; }
         .versions-inner { overflow: hidden; }
         .version-list {
             display: flex;
@@ -113,60 +121,93 @@
 </head>
 <body>
     <h1>5G Games Prototype</h1>
-    <p>Pick a prototype, then choose a build version to play:</p>
     <div class="prototype-list" id="prototype-list">Loading...</div>
  
     <script>
-        fetch('./prototypes.json')
+        fetch('./json/prototypes.json', { cache: 'no-cache' })
             .then(res => res.json())
             .then(prototypes => {
                 const container = document.getElementById('prototype-list');
                 container.innerHTML = '';
- 
-                prototypes.forEach((prototype, index) => {
+
+                const newNode = () => ({ groups: new Map(), games: [] });
+                const root = newNode();
+                prototypes.forEach(p => {
+                    let node = root;
+                    (p.group ? p.group.split('/') : []).forEach(seg => {
+                        if (!node.groups.has(seg)) node.groups.set(seg, newNode());
+                        node = node.groups.get(seg);
+                    });
+                    node.games.push(p);
+                });
+                const countGames = (node) =>
+                    node.games.length + [...node.groups.values()].reduce((n, g) => n + countGames(g), 0);
+
+                let uid = 0;
+
+                const makeDropdown = (title, metaText, fill) => {
                     const section = document.createElement('div');
                     section.className = 'prototype';
- 
-                    const panelId = `versions-${index}`;
+                    const panelId = `panel-${uid++}`;
 
                     const btn = document.createElement('button');
                     btn.className = 'prototype-btn';
                     btn.type = 'button';
                     btn.setAttribute('aria-expanded', 'false');
                     btn.setAttribute('aria-controls', panelId);
- 
+
                     const name = document.createElement('span');
-                    name.textContent = prototype.name;
- 
+                    name.textContent = title;
+
                     const meta = document.createElement('span');
                     meta.className = 'meta';
-                    const count = prototype.versions.length;
-                    meta.innerHTML = `<span>${count} version${count === 1 ? '' : 's'}</span><span class="chevron">▼</span>`;
- 
+                    meta.innerHTML = '<span></span><span class="chevron">▼</span>';
+                    meta.firstChild.textContent = metaText;
+
                     btn.appendChild(name);
                     btn.appendChild(meta);
- 
-                    // dropdown panel
+
                     const panel = document.createElement('div');
                     panel.className = 'versions';
                     panel.id = panelId;
- 
                     const inner = document.createElement('div');
                     inner.className = 'versions-inner';
- 
                     const list = document.createElement('div');
                     list.className = 'version-list';
- 
+                    fill(list);
+                    inner.appendChild(list);
+                    panel.appendChild(inner);
+
+                    btn.addEventListener('click', () => {
+                        const willOpen = !section.classList.contains('open');
+                        [...section.parentElement.children]
+                            .filter(s => s.classList.contains('prototype'))
+                            .forEach(s => {
+                                s.classList.remove('open');
+                                s.querySelector(':scope > .prototype-btn').setAttribute('aria-expanded', 'false');
+                            });
+                        if (willOpen) {
+                            section.classList.add('open');
+                            btn.setAttribute('aria-expanded', 'true');
+                        }
+                    });
+
+                    section.appendChild(btn);
+                    section.appendChild(panel);
+                    return section;
+                };
+
+                const addVersions = (prototype, list) => {
                     // newest first
                     [...prototype.versions].reverse().forEach(v => {
                         const a = document.createElement('a');
                         a.className = 'version-card';
-                        a.href = `./prototypes/${prototype.slug}/${v.version}/`;
- 
+                        a.href = `./prototypes/${prototype.path || prototype.slug}/${v.version}/`;
+
                         const hasChanges = v.changes && v.changes.length > 0;
 
                         const label = document.createElement('span');
-                        label.textContent = v.version;
+                        label.textContent = v.date ? `${v.version} | ${v.date}` : v.version;
 
                         let tag = null;
                         if (v.tag) {
@@ -197,31 +238,35 @@
                         }
                         list.appendChild(a);
                     });
- 
-                    inner.appendChild(list);
-                    panel.appendChild(inner);
- 
-                    // open this one, close the others
-                    btn.addEventListener('click', () => {
-                        const willOpen = !section.classList.contains('open');
-                        document.querySelectorAll('.prototype').forEach(s => {
-                            s.classList.remove('open');
-                            s.querySelector('.prototype-btn').setAttribute('aria-expanded', 'false');
-                        });
-                        if (willOpen) {
-                            section.classList.add('open');
-                            btn.setAttribute('aria-expanded', 'true');
-                        }
+                };
+
+                const renderNode = (node, parent) => {
+                    node.games.forEach(prototype => {
+                        const count = prototype.versions.length;
+                        parent.appendChild(makeDropdown(
+                            prototype.name,
+                            `${count} version${count === 1 ? '' : 's'}`,
+                            list => addVersions(prototype, list)
+                        ));
                     });
- 
-                    section.appendChild(btn);
-                    section.appendChild(panel);
-                    container.appendChild(section);
-                });
+                    [...node.groups.keys()]
+                        .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))
+                        .forEach(key => {
+                            const child = node.groups.get(key);
+                            const count = countGames(child);
+                            parent.appendChild(makeDropdown(
+                                key,
+                                `${count} game${count === 1 ? '' : 's'}`,
+                                list => renderNode(child, list)
+                            ));
+                        });
+                };
+
+                renderNode(root, container);
             })
             .catch(() => {
                 document.getElementById('prototype-list').textContent =
-                    'Could not load prototypes.json';
+                    'Could not load json/prototypes.json';
             });
     </script>
 </body>
