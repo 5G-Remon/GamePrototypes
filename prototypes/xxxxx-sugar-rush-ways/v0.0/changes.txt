@@ -1,2 +1,0 @@
-date: 2026-11-27
-First version (normal and extra bet mode only)
